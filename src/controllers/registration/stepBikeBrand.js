@@ -25,7 +25,7 @@ stepBikeBrand.start(async (ctx) => {
 stepBikeBrand.on(
   "text",
   // Composer.fork(
-  async (ctx) => {
+  async (ctx, next) => {
     if (ctx.message.text.length > symbolBrandLimit)
       return ctx.replyWithMarkdown(
         `❗️ Хотелось бы покороче, до ${symbolBrandLimit} символов!`
@@ -37,6 +37,8 @@ stepBikeBrand.on(
     ctx.session.registration.bikeBrand = capitalizeFirstLetter(
       ctx.message.text.toLowerCase()
     );
+
+    next();
   },
   // ),
   async (ctx) => {

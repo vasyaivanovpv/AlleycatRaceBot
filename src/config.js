@@ -7,6 +7,7 @@ const config = {
   DB_NAME: process.env.DB_NAME,
   DB_USER: "",
   DB_PASSWORD: "",
+  LOCAL_TIME_FROM_UTC: 0,
 };
 
 if (process.env.NODE_ENV === "production") {
@@ -17,6 +18,7 @@ if (process.env.NODE_ENV === "production") {
   config.DB_HOST = process.env.DB_HOST;
   config.DB_USER = process.env.DB_USER;
   config.DB_PASSWORD = process.env.DB_PASSWORD;
+  config.LOCAL_TIME_FROM_UTC = 3;
 }
 
 module.exports = config;

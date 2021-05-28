@@ -1,3 +1,5 @@
+const { LOCAL_TIME_FROM_UTC } = require("../config");
+
 const Composer = require("telegraf/composer");
 const Markup = require("telegraf/markup");
 
@@ -27,7 +29,7 @@ adminRoute.hears(/^editDate (.+)/, async (ctx) => {
     startDateStr[2],
     startDateStr[1] - 1,
     startDateStr[0],
-    raceDB.startDate.getHours(),
+    raceDB.startDate.getHours() - LOCAL_TIME_FROM_UTC,
     raceDB.startDate.getMinutes()
   );
 
@@ -56,7 +58,7 @@ adminRoute.hears(/^editTime (.+)/, async (ctx) => {
     raceDB.startDate.getFullYear(),
     raceDB.startDate.getMonth(),
     raceDB.startDate.getDate(),
-    startTimeStr[0],
+    startTimeStr[0] - LOCAL_TIME_FROM_UTC,
     startTimeStr[1]
   );
 
@@ -124,14 +126,14 @@ adminRoute.hears(/^addRace (.+)$/s, async (ctx) => {
     startDate[2],
     startDate[1] - 1,
     startDate[0],
-    23,
+    23 - LOCAL_TIME_FROM_UTC,
     59
   );
   const startFullDateWithTime = new Date(
     startDate[2],
     startDate[1] - 1,
     startDate[0],
-    startTime[0],
+    startTime[0] - LOCAL_TIME_FROM_UTC,
     startTime[1]
   );
 
