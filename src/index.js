@@ -30,7 +30,6 @@ try {
 
     bot.use(
       Composer.fork(Composer.privateChat(privateRoute)),
-      () => Promise.resolve(),
       Composer.groupChat(groupChatRoute)
     );
 

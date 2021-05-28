@@ -4,6 +4,7 @@ const Composer = require("telegraf/composer");
 const adminRoute = require("./admin");
 
 const groupChatRoute = new Composer();
+
 groupChatRoute.use(
   Composer.lazy((ctx) => {
     switch (ctx.chat.id) {
