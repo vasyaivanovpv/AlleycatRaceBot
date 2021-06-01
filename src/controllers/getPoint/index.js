@@ -36,45 +36,40 @@ getPoint.start(async (ctx) => {
   await ctx.scene.enter("main_menu");
 });
 
-getPoint.enter(
-  // Composer.fork(
-  async (ctx) => {
-    const memberDB = await Member.findOne({ telegramId: ctx.from.id }, null, {
-      sort: { joined: -1 },
-    });
-    const pointDB = await Point.findOne({
-      index: memberDB.currentPointIndex || 1,
-      race: memberDB.race._id,
-    });
+getPoint.enter(async (ctx) => {
+  const memberDB = await Member.findOne({ telegramId: ctx.from.id }, null, {
+    sort: { joined: -1 },
+  });
+  const pointDB = await Point.findOne({
+    index: memberDB.currentPointIndex || 1,
+    race: memberDB.race._id,
+  });
 
-    if (!memberDB.currentPointIndex) {
-      memberDB.currentPointIndex = 1;
-      await memberDB.save();
+  if (!memberDB.currentPointIndex) {
+    memberDB.currentPointIndex = 1;
+    await memberDB.save();
 
-      const text = getPhotoPlaceText(pointDB.index, pointDB.photoPlace);
-      return ctx.replyWithMarkdown(text);
-    }
-
-    const timestampDB = await Timestamp.findOne({
-      member: memberDB,
-      point: pointDB,
-    });
-
-    const text = timestampDB
-      ? getCode(pointDB.index, pointDB.location)
-      : getPhotoPlaceText(pointDB.index, pointDB.photoPlace);
-
-    // timestampDB &&
-    //   (await ctx.replyWithLocation(
-    //     pointDB.location.latitude,
-    //     pointDB.location.longitude
-    //   ));
-
+    const text = getPhotoPlaceText(pointDB.index, pointDB.photoPlace);
     return ctx.replyWithMarkdown(text);
   }
-  // ),
-  // () => Promise.resolve()
-);
+
+  const timestampDB = await Timestamp.findOne({
+    member: memberDB,
+    point: pointDB,
+  });
+
+  const text = timestampDB
+    ? getCode(pointDB.index, pointDB.location)
+    : getPhotoPlaceText(pointDB.index, pointDB.photoPlace);
+
+  // timestampDB &&
+  //   (await ctx.replyWithLocation(
+  //     pointDB.location.latitude,
+  //     pointDB.location.longitude
+  //   ));
+
+  return ctx.replyWithMarkdown(text);
+});
 
 getPoint.use(mediaGroup());
 
@@ -100,139 +95,127 @@ getPoint.on("media_group", async (ctx) => {
   );
 });
 
-getPoint.on(
-  "photo",
-  // Composer.fork(
-  async (ctx) => {
-    const now = new Date();
-    const memberDB = await Member.findOne({ telegramId: ctx.from.id }, null, {
-      sort: { joined: -1 },
-    })
-      .populate("bikeType")
-      .populate("race", "startDateWithTime");
-    const pointDB = await Point.findOne({
+getPoint.on("photo", async (ctx) => {
+  const now = new Date();
+  const memberDB = await Member.findOne({ telegramId: ctx.from.id }, null, {
+    sort: { joined: -1 },
+  })
+    .populate("bikeType")
+    .populate("race", "startDateWithTime");
+  const pointDB = await Point.findOne({
+    index: memberDB.currentPointIndex,
+    race: memberDB.race._id,
+  });
+  const timestampDB = await Timestamp.findOne({
+    member: memberDB,
+    point: pointDB,
+  });
+
+  if (timestampDB) return;
+
+  await Timestamp.create({
+    date: now,
+    member: memberDB,
+    point: pointDB,
+    photo: ctx.message.photo[0].file_id,
+  });
+
+  const text = getCode(pointDB.index, pointDB.location);
+
+  // await ctx.replyWithLocation(
+  //   pointDB.location.latitude,
+  //   pointDB.location.longitude
+  // );
+  await ctx.replyWithMarkdown(text);
+
+  const timeStr = formatMilliseconds(
+    now - memberDB.race.startDateWithTime,
+    true,
+    true
+  );
+
+  const caption = getTimestampCaption(memberDB, pointDB, timeStr);
+
+  await ctx.telegram.sendPhoto(ADMIN_CHAT, ctx.message.photo[0].file_id, {
+    caption: caption,
+    parse_mode: "markdown",
+  });
+
+  if (!pointDB.firstMessageId) {
+    await agenda.now("update_message", {
+      pointID: pointDB._id,
+      pointType: photoOptions.firstMessageId.name,
+    });
+  }
+});
+
+getPoint.on("text", async (ctx) => {
+  const now = new Date();
+  const memberDB = await Member.findOne({ telegramId: ctx.from.id }, null, {
+    sort: { joined: -1 },
+  })
+    .populate("bikeType")
+    .populate("race", "startDateWithTime");
+  const pointDB = await Point.findOne({
+    index: memberDB.currentPointIndex,
+    race: memberDB.race._id,
+  });
+
+  const timestampDB = await Timestamp.findOne({
+    member: memberDB,
+    point: pointDB,
+  });
+
+  if (!timestampDB) return;
+
+  if (ctx.message.text.toLowerCase() !== pointDB.code)
+    return ctx.replyWithMarkdown(`❗️ Это неверный код! Попробуй еще!`);
+
+  await Timestamp.create({
+    date: now,
+    member: memberDB,
+    point: pointDB,
+  });
+
+  const countPoints = await Point.countDocuments({ race: memberDB.race._id });
+
+  if (countPoints !== memberDB.currentPointIndex) {
+    memberDB.currentPointIndex = memberDB.currentPointIndex + 1;
+    await memberDB.save();
+
+    const nextPointDB = await Point.findOne({
       index: memberDB.currentPointIndex,
       race: memberDB.race._id,
     });
-    const timestampDB = await Timestamp.findOne({
-      member: memberDB,
-      point: pointDB,
-    });
 
-    if (timestampDB) return;
-
-    await Timestamp.create({
-      date: now,
-      member: memberDB,
-      point: pointDB,
-      photo: ctx.message.photo[0].file_id,
-    });
-
-    const text = getCode(pointDB.index, pointDB.location);
-
-    // await ctx.replyWithLocation(
-    //   pointDB.location.latitude,
-    //   pointDB.location.longitude
-    // );
+    const text = getPhotoPlaceText(nextPointDB.index, nextPointDB.photoPlace);
     await ctx.replyWithMarkdown(text);
-
-    const timeStr = formatMilliseconds(
-      now - memberDB.race.startDateWithTime,
-      true,
-      true
-    );
-
-    const caption = getTimestampCaption(memberDB, pointDB, timeStr);
-
-    await ctx.telegram.sendPhoto(ADMIN_CHAT, ctx.message.photo[0].file_id, {
-      caption: caption,
-      parse_mode: "markdown",
-    });
-
-    if (!pointDB.firstMessageId) {
-      await agenda.now("update_message", {
-        pointID: pointDB._id,
-        pointType: photoOptions.firstMessageId.name,
-      });
-    }
   }
-  // ),
-  // () => Promise.resolve()
-);
 
-getPoint.on(
-  "text",
-  // Composer.fork(
-  async (ctx) => {
-    const now = new Date();
-    const memberDB = await Member.findOne({ telegramId: ctx.from.id }, null, {
-      sort: { joined: -1 },
-    })
-      .populate("bikeType")
-      .populate("race", "startDateWithTime");
-    const pointDB = await Point.findOne({
-      index: memberDB.currentPointIndex,
-      race: memberDB.race._id,
+  const timeStr = formatMilliseconds(
+    now - memberDB.race.startDateWithTime,
+    true,
+    true
+  );
+
+  if (!pointDB.secondMessageId) {
+    await agenda.now("update_message", {
+      pointID: pointDB._id,
+      pointType: photoOptions.secondMessageId.name,
     });
-
-    const timestampDB = await Timestamp.findOne({
-      member: memberDB,
-      point: pointDB,
-    });
-
-    if (!timestampDB) return;
-
-    if (ctx.message.text.toLowerCase() !== pointDB.code)
-      return ctx.replyWithMarkdown(`❗️ Это неверный код! Попробуй еще!`);
-
-    await Timestamp.create({
-      date: now,
-      member: memberDB,
-      point: pointDB,
-    });
-
-    const countPoints = await Point.countDocuments({ race: memberDB.race._id });
-
-    if (countPoints !== memberDB.currentPointIndex) {
-      memberDB.currentPointIndex = memberDB.currentPointIndex + 1;
-      await memberDB.save();
-
-      const nextPointDB = await Point.findOne({
-        index: memberDB.currentPointIndex,
-        race: memberDB.race._id,
-      });
-
-      const text = getPhotoPlaceText(nextPointDB.index, nextPointDB.photoPlace);
-      await ctx.replyWithMarkdown(text);
-    }
-
-    const timeStr = formatMilliseconds(
-      now - memberDB.race.startDateWithTime,
-      true,
-      true
-    );
-
-    if (!pointDB.secondMessageId) {
-      await agenda.now("update_message", {
-        pointID: pointDB._id,
-        pointType: photoOptions.secondMessageId.name,
-      });
-    }
-
-    if (countPoints === pointDB.index) {
-      memberDB.finishPlace = await Timestamp.countDocuments({
-        point: pointDB,
-        photo: null,
-      });
-      memberDB.finishTime = timeStr;
-      await memberDB.save();
-
-      return ctx.scene.enter("main_menu");
-    }
   }
-  // ),
-  // () => Promise.resolve()
-);
+
+  if (countPoints === pointDB.index) {
+    memberDB.finishPlace = await Timestamp.countDocuments({
+      point: pointDB,
+      photo: null,
+    });
+    memberDB.finishTime = timeStr;
+    await memberDB.save();
+
+    return ctx.scene.enter("main_menu");
+  }
+});
 
 getPoint.use(async (ctx) => {
   return;

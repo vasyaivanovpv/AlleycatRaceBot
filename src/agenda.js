@@ -76,8 +76,6 @@ agenda.define("update_message", async (job, done) => {
   }
 
   if (pointDB[pointType]) {
-    console.log("index: " + pointDB.index);
-    console.log(pointType);
     try {
       await telegram.editMessageText(
         CHANNEL,
@@ -90,7 +88,6 @@ agenda.define("update_message", async (job, done) => {
       );
     } catch (e) {
       if (e.code === 400) {
-        console.log("done");
         return done();
       }
     }

@@ -1,6 +1,5 @@
 const { ADMIN_CHAT } = require("../../config");
 const Scene = require("telegraf/scenes/base");
-const Composer = require("telegraf/composer");
 const { validateBrand, capitalizeFirstLetter } = require("../../utils");
 
 const Member = require("../../models/Member");
@@ -24,7 +23,6 @@ stepBikeBrand.start(async (ctx) => {
 
 stepBikeBrand.on(
   "text",
-  // Composer.fork(
   async (ctx, next) => {
     if (ctx.message.text.length > symbolBrandLimit)
       return ctx.replyWithMarkdown(
@@ -40,7 +38,6 @@ stepBikeBrand.on(
 
     next();
   },
-  // ),
   async (ctx) => {
     const userDB = await User.findOne({ telegramId: ctx.from.id });
     const raceDB = await Race.findOne(
@@ -68,13 +65,11 @@ stepBikeBrand.on(
 
     await ctx.telegram.sendMessage(
       ADMIN_CHAT,
-      `❗️ *Уведомление* \n\nНа гонку *${
-        raceDB.name
-      }* зарегался новый участник [${
+      `❗️ *Уведомление* \n\nНа гонке *${raceDB.name}* новый участник: \n\n[${
         ctx.session.registration.name
-      }](tg://user?id=${ctx.from.id}) *${bikeTypeDB.short.toUpperCase()} ${
+      }](tg://user?id=${ctx.from.id}) ${bikeTypeDB.short.toUpperCase()} ${
         ctx.session.registration.bikeBrand
-      }*`,
+      }`,
       {
         parse_mode: "Markdown",
       }

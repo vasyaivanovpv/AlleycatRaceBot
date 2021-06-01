@@ -27,30 +27,24 @@ stepBikeType.start(async (ctx) => {
   await ctx.scene.enter("main_menu");
 });
 
-stepBikeType.on(
-  "callback_query",
-  // Composer.fork(
-  async (ctx) => {
-    const { type, id } = JSON.parse(ctx.callbackQuery.data);
+stepBikeType.on("callback_query", async (ctx) => {
+  const { type, id } = JSON.parse(ctx.callbackQuery.data);
 
-    switch (type) {
-      case typesQuery.BIKE_TYPE:
-        await ctx.editMessageReplyMarkup();
+  switch (type) {
+    case typesQuery.BIKE_TYPE:
+      await ctx.editMessageReplyMarkup();
 
-        ctx.session.registration.bikeType = id;
+      ctx.session.registration.bikeType = id;
 
-        await ctx.answerCbQuery();
-        return ctx.scene.enter("step_bike_brand");
+      await ctx.answerCbQuery();
+      return ctx.scene.enter("step_bike_brand");
 
-      default:
-        return ctx.replyWithMarkdown(
-          `❗️ Выбери тип велосипеда, на котором будешь участвовать в гонке!`
-        );
-    }
+    default:
+      return ctx.replyWithMarkdown(
+        `❗️ Выбери тип велосипеда, на котором будешь участвовать в гонке!`
+      );
   }
-  // ),
-  // () => Promise.resolve()
-);
+});
 
 stepBikeType.use(async (ctx) =>
   ctx.replyWithMarkdown(
