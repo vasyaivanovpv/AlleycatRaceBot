@@ -50,7 +50,7 @@ adminRoute.hears(/^editTime (.+)/, async (ctx) => {
 
   const raceDB = await Race.findOne({ index: index });
   if (!raceDB)
-    return ctx.replyWithMarkdown(`❗️ Нет гонки с индексом ${index}!`, {
+    return ctx.replyWithMarkdown(`❗️ Нет гонки с1 индексом ${index}!`, {
       reply_to_message_id: ctx.message.message_id,
     });
 
