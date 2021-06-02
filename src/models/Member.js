@@ -24,7 +24,7 @@ const schema = new Schema({
     type: Number,
     default: 0,
   },
-  finishPlace: Number,
+  finishPosition: Number,
   finishTime: String,
 });
 

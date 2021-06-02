@@ -76,7 +76,7 @@ stepBikeBrand.on(
     );
 
     await ctx.replyWithMarkdown(
-      `✅ *Регистрация*\n\nТы добавлен в список участников с данными: \n\n*${
+      `✅ *Регистрация*\n\nТы добавлен в список участников как: \n\n*${
         ctx.session.registration.name
       }* ${bikeTypeDB.short.toUpperCase()} ${
         ctx.session.registration.bikeBrand

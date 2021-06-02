@@ -7,7 +7,7 @@ const Member = require("../../models/Member");
 const Biketype = require("../../models/Biketype");
 const Race = require("../../models/Race");
 
-const timeStartLimit = 15 * 60 * 1000;
+const timeStartLimit = 10 * 60 * 1000;
 
 const raceQueryOptions = {
   sort: {
@@ -66,11 +66,13 @@ const getText = (memberDB, raceDB, isEnding) => {
     hour12: false,
   });
 
-  const startHeader = `гонка: *${raceDB.name}*\nдата: *${startDate}*\nстарт: *${startTime}, ${raceDB.startPlace}*`;
+  const startHeader = `гонка: *${raceDB.name}*\nдата: *${startDate}*\nместо: *${raceDB.startPlace}*\nстарт: *${startTime}*`;
 
   const body = memberDB
-    ? memberDB.finishPlace
-      ? `гонка: *${raceDB.name}*\nместо: *${memberDB.finishPlace}*\nвремя: *${memberDB.finishTime}*\nнаграждение: *${raceDB.finishPlace}*\n\n${memberLine}\n${spbfg}\n\nЕееее. Ты финишировал, поздравляю тебя!\n\n`
+    ? memberDB.finishPosition
+      ? memberDB.finishPosition === -1
+        ? `гонка: *${raceDB.name}*\nместо: *не доехал*\nвремя: *${memberDB.finishTime}*\nнаграждение: *${raceDB.finishPlace}*\n\n${memberLine}\n${spbfg}\n\nВозможно тебе просто не повезло. Но в следующий раз у тебя все получится!\n\n`
+        : `гонка: *${raceDB.name}*\nместо: *${memberDB.finishPosition}*\nвремя: *${memberDB.finishTime}*\nнаграждение: *${raceDB.finishPlace}*\n\n${memberLine}\n${spbfg}\n\nЕееее. Ты финишировал, поздравляю тебя!\n\n`
       : `${startHeader}\n\n${memberLine}\n${spbfg}\n\nС помощью указанного ориентира самостоятельно выбери место старта. Приехав на старт к назначенному времени, жми "Получить задание" и врывайся в гонку!\n\n`
     : isEnding
     ? `${startHeader}\n\n${spbfg}\n\nРегистрация уже закончилась, ждем тебя на следующей гонке!\n\n`
@@ -87,7 +89,7 @@ const getIK = async (memberDB, countMembersDB, isEnding) => {
   if (
     memberDB &&
     (memberDB.currentPointIndex || !isEnding) &&
-    !memberDB.finishPlace
+    !memberDB.finishPosition
   )
     ik.push(startRaceBtn);
 
@@ -187,7 +189,7 @@ mainMenu.on("callback_query", async (ctx) => {
         return ctx.scene.enter(`get_point`);
       }
 
-      if (isEnding && raceMember.memberDB.finishPlace)
+      if (isEnding && raceMember.memberDB.finishPosition)
         return ctx.answerCbQuery();
 
       if (isEnding && raceMember.memberDB.currentPointIndex) {

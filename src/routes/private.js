@@ -2,7 +2,6 @@ const Composer = require("telegraf/composer");
 const Stage = require("telegraf/stage");
 const session = require("telegraf/session");
 const { getRaceCaption } = require("../helpers");
-const { sleep } = require("../utils");
 
 const User = require("../models/User");
 const Race = require("../models/Race");
