@@ -66,7 +66,7 @@ const getText = (memberDB, raceDB, isEnding) => {
     hour12: false,
   });
 
-  const startHeader = `1гонка: *${raceDB.name}*\nдата: *${startDate}*\nместо: *${raceDB.startPlace}*\nстарт: *${startTime}*`;
+  const startHeader = `гонка: *${raceDB.name}*\nдата: *${startDate}*\nместо: *${raceDB.startPlace}*\nстарт: *${startTime}*`;
 
   const body = memberDB
     ? memberDB.finishPosition
